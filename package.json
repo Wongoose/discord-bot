@@ -6,6 +6,10 @@
   "scripts": {
     "start": "node ./src/index.js"
   },
+  "engines": {
+    "node": "16.9.1"
+  },
+  "engineStrict": true,
   "author": "",
   "license": "ISC",
   "dependencies": {
