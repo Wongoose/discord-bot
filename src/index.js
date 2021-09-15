@@ -173,7 +173,7 @@ function play(messageGuildID, song) {
     }
 
     const dispatcher = serverQueue.connection
-        .play(ytdl(song.url, { filter: 'audioonly', quality: 'highestaudio', highWaterMark: 1 << 50 }, { highWaterMark: 1 }))
+        .play(ytdl(song.url, { filter: 'audioonly', quality: 'highestaudio', highWaterMark: 1 << 24, }, { highWaterMark: 1 }))
         .on("finish", () => {
             serverQueue.songs.shift();
             play(messageGuildID, serverQueue.songs[0]);
