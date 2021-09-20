@@ -26,7 +26,14 @@ client.once("disconnect", () => {
 });
 
 client.on("message", async message => {
-    if (message.author.bot) return;
+    if (message.author.bot) {
+        if (message.content.indexOf("https://") !== message.content.lastIndexOf("https://")) {
+            message.suppressEmbeds(true);
+        } else if (!isNaN(message.content.charAt(3))) {
+            message.suppressEmbeds(true);
+
+        }
+    };
     if (!message.content.startsWith(prefix)) return;
 
     const serverQueue = queue.get(message.guild.id);
@@ -95,45 +102,85 @@ async function execute(message, serverQueue) {
     //     title: songInfo.videoDetails.title,
     //     url: songInfo.videoDetails.video_url,
     // };
-    const song = {
-        title: searchResult.playlist ? searchResult.tracks[0].title : searchResult.tracks[0].title,
-        url: searchResult.playlist ? searchResult.tracks[0].url : searchResult.tracks[0].url,
-    };
 
-    if (!serverQueue) {
-        const queueContruct = {
-            textChannel: message.channel,
-            voiceChannel: voiceChannel,
-            connection: null,
-            songs: [],
-            volume: 5,
-            playing: true
-        };
+    const songResultMap = {};
+    const messageList = [];
+    message.channel.send("**Choose your song:**\n\n");
+    console.log("\nconsoleLog: CHoose your song\n");
 
-        queue.set(message.guild.id, queueContruct);
-        console.log("init set queue key id: " + message.guild.id);
 
-        queueContruct.songs.push(song);
-        console.log('URL is: ' + song.url);
+    function chooseSongOptions() {
 
-        try {
-            var connection = await voiceChannel.join();
-            console.log("Joined voice channel");
-            queueContruct.connection = connection;
-            console.log("DONE queueConstruct.connection");
-            play(message.guild.id, queueContruct.songs[0]);
-            console.log("After called play() function!");
-        } catch (err) {
-            console.log("FAILED | failed to join channel & play");
-            console.log(err);
-            queue.delete(message.guild.id);
-            return message.channel.send(err);
+        for (let i = 0; i < 5; i++) {
+            const songTitle = searchResult.tracks[i].title;
+            const songAuthor = searchResult.tracks[i].author;
+            const songUrl = searchResult.tracks[i].url;
+
+            const songDetails = {
+                title: songTitle,
+                author: songAuthor,
+                url: songUrl,
+            }
+            songResultMap[i] = songDetails;
+
+            // message.channel.send("-");
+            // const message = ("> " + "`" + `${i}` + "`" + " " + `${songTitle} by ${songAuthor}\n${songUrl}\n`).toString();
+            // messageList.push(message);
+            message.channel.send("> " + "`" + `${i}` + "`" + " " + `${songTitle} by ${songAuthor}\n${songUrl}\n`);
+            console.log("\nconsoleLog\n");
+            console.log(`${i} ${songTitle} by ${songAuthor}\n${songUrl}`);
         }
-    } else {
-        serverQueue.songs.push(song);
-        return message.channel.send(`Why so demanding... Here, ${song.title} has been added to the queue!`);
-        // }
+
+        // messageList.forEach((message) => {
+        //     console.log(message);
+        //     message.channel.send(message.toString());
+        // });
     }
+
+    chooseSongOptions();
+
+    // message.channel.send("https://www.youtube.com/watch?v=UmnOAu0ZmNE\nhttps://www.youtube.com/watch?v=hoaj_NzeuR0\nhttps://www.youtube.com/watch?v=orLzKK_7erM")
+
+
+    //     const song = {
+    //         title: searchResult.playlist ? searchResult.tracks[0].title : searchResult.tracks[0].title,
+    //         url: searchResult.playlist ? searchResult.tracks[0].url : searchResult.tracks[0].url,
+    //     };
+
+    //     if (!serverQueue) {
+    //         const queueContruct = {
+    //             textChannel: message.channel,
+    //             voiceChannel: voiceChannel,
+    //             connection: null,
+    //             songs: [],
+    //             volume: 5,
+    //             playing: true
+    //         };
+
+    //         queue.set(message.guild.id, queueContruct);
+    //         console.log("init set queue key id: " + message.guild.id);
+
+    //         queueContruct.songs.push(song);
+    //         console.log('URL is: ' + song.url);
+
+    //         try {
+    //             var connection = await voiceChannel.join();
+    //             console.log("Joined voice channel");
+    //             queueContruct.connection = connection;
+    //             console.log("DONE queueConstruct.connection");
+    //             play(message.guild.id, queueContruct.songs[0]);
+    //             console.log("After called play() function!");
+    //         } catch (err) {
+    //             console.log("FAILED | failed to join channel & play");
+    //             console.log(err);
+    //             queue.delete(message.guild.id);
+    //             return message.channel.send(err);
+    //         }
+    //     } else {
+    //         serverQueue.songs.push(song);
+    //         return message.channel.send(`Why so demanding... Here, ${song.title} has been added to the queue!`);
+    //         // }
+    //     }
 }
 
 function skip(message, serverQueue) {
