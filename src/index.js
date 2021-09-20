@@ -104,8 +104,8 @@ async function execute(message, serverQueue) {
     // };
 
     const songResultMap = {};
-    const messageList = [];
-    message.channel.send("**Choose your song:**\n\n");
+    let compiledMessage = "";
+    message.channel.send("**🥳 Please select your song from **" + "`" + "0-4" + "`" + " below:" + "\n\n");
     console.log("\nconsoleLog: CHoose your song\n");
 
 
@@ -123,13 +123,16 @@ async function execute(message, serverQueue) {
             }
             songResultMap[i] = songDetails;
 
-            // message.channel.send("-");
-            // const message = ("> " + "`" + `${i}` + "`" + " " + `${songTitle} by ${songAuthor}\n${songUrl}\n`).toString();
-            // messageList.push(message);
-            message.channel.send("> " + "`" + `${i}` + "`" + " " + `${songTitle} by ${songAuthor}\n${songUrl}\n`);
-            console.log("\nconsoleLog\n");
-            console.log(`${i} ${songTitle} by ${songAuthor}\n${songUrl}`);
+            const tempMessage = String("> " + "**`" + ` ${i} ` + "`** " + " 👉 " + ` ${songTitle} by ${songAuthor}\n` + "> - " + `${songUrl}\n\n`);
+            console.log(tempMessage);
+
+            compiledMessage = compiledMessage.concat(tempMessage);
+
+            if (i == 4) {
+                message.channel.send(compiledMessage);
+            }
         }
+
 
         // messageList.forEach((message) => {
         //     console.log(message);
