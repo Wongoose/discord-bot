@@ -1,15 +1,15 @@
-const { GuildMember, VoiceChannel, Speaking } = require("discord.js");
-const Client = require('./client');
-const { Player } = require('discord-player');
-const { QueryType } = require('discord-player');
+const { GuildMember } = require("discord.js");
+const Client = require("./client");
+const { Player } = require("discord-player");
+const { QueryType } = require("discord-player");
 const { prefix, token } = require("./config");
 
 const ytdl = require("ytdl-core");
-const { options } = require("./play");
+// const { options } = require("./play");
 
 // const client = new Discord.Client();
 const client = new Client();
-const player = new Player(client);
+const discordPlayer = new Player(client);
 
 const queue = new Map();
 let songResultMap = new Map();
@@ -28,13 +28,17 @@ client.once("disconnect", () => {
 });
 
 client.on("messageCreate", async message => {
-    if (message.author.bot) {
-        if (message.content.indexOf("https://") !== message.content.lastIndexOf("https://")) {
-            message.suppressEmbeds(true);
-        } else if (!isNaN(message.content.charAt(3)) || message.content.includes("> ")) {
-            message.suppressEmbeds(true);
 
+    if (message.author.bot) {
+        if (!isNaN(message.content.charAt(3)) || message.content.includes("> ")) {
+            message.suppressEmbeds(true);
         }
+        // if (message.content.indexOf("https://") !== message.content.lastIndexOf("https://")) {
+        //     message.suppressEmbeds(true);
+        // } else if (!isNaN(message.content.charAt(3)) || message.content.includes("> ")) {
+        //     message.suppressEmbeds(true);
+
+        // }
     };
     if (!message.content.startsWith(prefix)) return;
 
@@ -87,7 +91,6 @@ async function search(message, serverQueue) {
         return message.channel.send("Please use `-p ` and search song name after the 'space'. (e.g. `-p songname` )");
     }
 
-    // const voiceChannel = message.member.voice.channel;
     const voiceChannel = message.member.voice.channel;
     if (!voiceChannel || !(message.member instanceof GuildMember))
         return message.channel.send(
@@ -103,14 +106,18 @@ async function search(message, serverQueue) {
     //newlines
     // const query = args[1];
     console.log("Searching Query is: " + query);
-    let searchResult = await player.search(query, {
-        requestedBy: message.user,
-        searchEngine: QueryType.SOUNDCLOUD_SEARCH,
-    }).then((res) => {
-        return res;
-    });
+    let searchResult;
+    try {
+        searchResult = await discordPlayer.search(query, {
+            requestedBy: message.author,
+            searchEngine: QueryType.YOUTUBE_SEARCH,
+        });
+    } catch (err) {
+        console.log("ERROR: " + err);
+    };
 
     console.log("searchResult is: " + searchResult.playlist);
+    console.log("searchResult is: " + searchResult.tracks);
 
     if (!searchResult || !searchResult.tracks.length) {
         return message.channel.send('Aiya, I cannot find the song with that name!');
