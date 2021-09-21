@@ -27,7 +27,7 @@ client.once("disconnect", () => {
     console.log("Disconnect!");
 });
 
-client.on("message", async message => {
+client.on("messageCreate", async message => {
     if (message.author.bot) {
         if (message.content.indexOf("https://") !== message.content.lastIndexOf("https://")) {
             message.suppressEmbeds(true);
@@ -82,7 +82,7 @@ async function search(message, serverQueue) {
     let query = "";
     if (myString.charAt(2) == " ") {
         query = myString.substring(myString.indexOf(" ") + 1);
-        console.log("Query is: " + query);
+        console.log("Typed query is: " + query);
     } else {
         return message.channel.send("Please use `-p ` and search song name after the 'space'. (e.g. `-p songname` )");
     }
@@ -102,10 +102,15 @@ async function search(message, serverQueue) {
 
     //newlines
     // const query = args[1];
-    const searchResult = await player.search(query, {
+    console.log("Searching Query is: " + query);
+    let searchResult = await player.search(query, {
         requestedBy: message.user,
-        searchEngine: QueryType.YOUTUBE_SEARCH,
-    }).catch(() => { });
+        searchEngine: QueryType.SOUNDCLOUD_SEARCH,
+    }).then((res) => {
+        return res;
+    });
+
+    console.log("searchResult is: " + searchResult.playlist);
 
     if (!searchResult || !searchResult.tracks.length) {
         return message.channel.send('Aiya, I cannot find the song with that name!');
