@@ -1,10 +1,11 @@
 const { GuildMember } = require("discord.js");
+const Discord = require("discord.js");
 const Client = require("./client");
 const { Player } = require("discord-player");
 const { QueryType } = require("discord-player");
 const { prefix, token } = require("./config");
-
 const ytdl = require("ytdl-core");
+const { joinVoiceChannel, createAudioPlayer, AudioPlayerStatus, AudioResource, createAudioResource } = require('@discordjs/voice');
 // const { options } = require("./play");
 
 // const client = new Discord.Client();
@@ -136,6 +137,7 @@ async function search(message, serverQueue) {
                 textChannel: message.channel,
                 voiceChannel: voiceChannel,
                 connection: null,
+                audioPlayer: null,
                 songs: [],
                 volume: 5,
                 playing: true
@@ -148,7 +150,16 @@ async function search(message, serverQueue) {
             console.log('URL is: ' + song.url);
 
             try {
-                var connection = await voiceChannel.join();
+                const connection = joinVoiceChannel(
+                    {
+                        channelId: voiceChannel.id,
+                        guildId: message.guild.id,
+                        adapterCreator: message.guild.voiceAdapterCreator,
+                        selfDeaf: false,
+                        selfMute: false,
+                    }); 
+
+                // var connection = await voiceChannel.join();
                 console.log("Joined voice channel");
                 queueContruct.connection = connection;
                 console.log("DONE queueConstruct.connection");
@@ -229,6 +240,7 @@ async function select(message, serverQueue, songResultMap) {
                     textChannel: message.channel,
                     voiceChannel: voiceChannel,
                     connection: null,
+                    audioPlayer: null,
                     songs: [],
                     volume: 5,
                     playing: true
@@ -240,7 +252,16 @@ async function select(message, serverQueue, songResultMap) {
                 console.log('URL is: ' + song.url);
 
                 try {
-                    var connection = await voiceChannel.join();
+                    const connection = joinVoiceChannel(
+                        {
+                            channelId: voiceChannel.id,
+                            guildId: message.guild.id,
+                            adapterCreator: message.guild.voiceAdapterCreator,
+                            selfDeaf: false,
+                            selfMute: false,
+                        });
+
+                    // var connection = await voiceChannel.join();
                     console.log("Joined voice channel");
                     queueContruct.connection = connection;
                     console.log("DONE queueConstruct.connection");
@@ -278,7 +299,8 @@ function skip(message, serverQueue) {
         );
     if (!serverQueue)
         return message.channel.send("Uhh... There is no song that I could skip!");
-    serverQueue.connection.dispatcher.end();
+
+    serverQueue.audioPlayer.stop();
 }
 
 function stop(message, serverQueue) {
@@ -291,33 +313,48 @@ function stop(message, serverQueue) {
         return message.channel.send("There is no song that I could stop!");
 
     serverQueue.songs = [];
-    serverQueue.connection.dispatcher.end();
+    serverQueue.audioPlayer.stop();
+
+    // serverQueue.connection.dispatcher.end();
 }
 
 function play(messageGuildID, song) {
     console.log("RUN play() function! guild id is: " + messageGuildID);
 
     const serverQueue = queue.get(messageGuildID);
+
+    const audioPlayer = createAudioPlayer();
+    console.log("Created AudioPlayer: " + audioPlayer.state);
+
+    serverQueue.audioPlayer = audioPlayer;
+
     if (!song) {
         console.log("No song! Leaving channel");
         serverQueue.textChannel.send("No song! Leaving channel");
         songResultMap = {};
-        serverQueue.voiceChannel.leave();
+        serverQueue.connection.disconnect();
+        // serverQueue.voiceChannel.leave();
         queue.delete(messageGuildID);
         return;
     }
 
-    const dispatcher = serverQueue.connection
-        .play(ytdl(song.url, { filter: 'audioonly', quality: 'highestaudio', highWaterMark: 1 << 32, }, { highWaterMark: 1 }))
-        .on("finish", () => {
-            serverQueue.songs.shift();
-            play(messageGuildID, serverQueue.songs[0]);
-        })
-        .on("error", error => console.error(error));
-    dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
-    console.log(`Start playing: ${song.title}\n` + song.url);
+    const resource = createAudioResource(ytdl(song.url, { filter: 'audioonly', quality: 'highestaudio', highWaterMark: 1 << 32, }, { highWaterMark: 1 }));
+    console.log("Created resource: " + resource.readable);
+    // resource.volume.setVolume(0.5);
+    audioPlayer.play(resource);
+    serverQueue.connection.subscribe(audioPlayer);
+    console.log("Connection subscribed to AudioPlayer!");
+    audioPlayer.on(AudioPlayerStatus.Idle, () => {
+        serverQueue.songs.shift();
+        play(messageGuildID, serverQueue.songs[0]);
+    });
+    audioPlayer.on("error", error => console.error(error));
 
-    serverQueue.textChannel.send(`Start playing: **${song.title}**` + '\n' + song.url);
+    // dispatcher.setVolumeLogarithmic(serverQueue.volume / 5);
+    console.log(`Start playing: ${song.title}\n` + song.url);
+    audioPlayer.on(AudioPlayerStatus.Playing, () => {
+        serverQueue.textChannel.send(`Start playing: **${song.title}**` + '\n' + song.url);
+    });
 }
 
 

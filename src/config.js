@@ -5,4 +5,4 @@ const config = {
     token: process.env.token,
 }
 
-module.exports = config
+module.exports = config;
