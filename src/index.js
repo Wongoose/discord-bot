@@ -78,7 +78,7 @@ client.on("messageCreate", async message => {
         return;
     }
     else {
-        message.channel.send("What are you typing...I don't understand!");
+        message.channel.send("What are you typing...I don't understand! 👀");
     }
 });
 
@@ -95,7 +95,7 @@ async function search(message, serverQueue) {
     const voiceChannel = message.member.voice.channel;
     if (!voiceChannel || !(message.member instanceof GuildMember))
         return message.channel.send(
-            "Go to MAMAK (Husen) to listen to your music!"
+            "Please go to a voice channel to listen to your music! 🎵"
         );
     const permissions = voiceChannel.permissionsFor(message.client.user);
     if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
@@ -157,7 +157,7 @@ async function search(message, serverQueue) {
                         adapterCreator: message.guild.voiceAdapterCreator,
                         selfDeaf: false,
                         selfMute: false,
-                    }); 
+                    });
 
                 // var connection = await voiceChannel.join();
                 console.log("Joined voice channel");
@@ -267,10 +267,13 @@ async function select(message, serverQueue, songResultMap) {
                     console.log("DONE queueConstruct.connection");
                     play(message.guild.id, queueContruct.songs[0]);
                     console.log("After called play() function!");
+                    songResultMap = {};
+
                 } catch (err) {
                     console.log("FAILED | failed to join channel & play");
                     console.log(err);
                     queue.delete(message.guild.id);
+                    songResultMap = {};
                     return message.channel.send(err);
                 }
 
