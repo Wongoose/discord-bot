@@ -64,21 +64,21 @@ client.on("messageCreate", async message => {
             select(message, serverQueue, songResultMap);
             return;
         } else {
-            message.channel.send("No playlist to select from. Please use " + "`-p `" + " to search for a song.");
+            message.channel.send("Eh~ There's no playlist for me to select from. 🥺 Please use " + "`-p `" + " to search for a song! 😊");
             return;
 
         }
     } else if (message.content.startsWith(`${prefix}help`)) {
-        message.channel.send("🆘 **DJ LEE HELP SECTION:**\n");
+        message.channel.send("🔊 **DJ-Chan HELP SECTION:**\n");
         message.channel.send("> Use ` -p ` to search for a song.\n");
         message.channel.send("> Use ` -select ` to select a song from playlist.\n");
         message.channel.send("> Use ` -skip ` to skip to the next song in queue.\n");
-        message.channel.send("> Use ` -stop ` to stop all songs and to disconnect DJ LEE.\n-\n");
-        message.channel.send("🙏🏻 Thank you for using ` DJ LEE ` as your preferred music bot! We're glad to be at your service.");
+        message.channel.send("> Use ` -stop ` to stop all songs and to disconnect DJ-Chan.\n-\n");
+        message.channel.send("🤭🙏🏻 Ohayo~ Thank you for using ` DJ-Chan ` as your preferred music bot. I'm so happy to be at your service!");
         return;
     }
     else {
-        message.channel.send("What are you typing...I don't understand! 👀");
+        message.channel.send("Eh? What are you typing...I don't understand! 👀");
     }
 });
 
@@ -89,13 +89,13 @@ async function search(message, serverQueue) {
         query = myString.substring(myString.indexOf(" ") + 1);
         console.log("Typed query is: " + query);
     } else {
-        return message.channel.send("Please use `-p ` and search song name after the 'space'. (e.g. `-p songname` )");
+        return message.channel.send("Please use `-p ` and search song name after the 'space'. (e.g. `-p songname` ) 👉👈");
     }
 
     const voiceChannel = message.member.voice.channel;
     if (!voiceChannel || !(message.member instanceof GuildMember))
         return message.channel.send(
-            "Please go to a voice channel to listen to your music! 🎵"
+            "Mmh... Please go to a voice channel to listen to your music! 🎵"
         );
     const permissions = voiceChannel.permissionsFor(message.client.user);
     if (!permissions.has("CONNECT") || !permissions.has("SPEAK")) {
@@ -118,18 +118,18 @@ async function search(message, serverQueue) {
     };
 
     console.log("searchResult is: " + searchResult.playlist);
-    console.log("searchResult is: " + searchResult.tracks);
+    // console.log("searchResult is: " + searchResult.tracks);
 
     if (!searchResult || !searchResult.tracks.length) {
-        return message.channel.send('Aiya, I cannot find the song with that name!');
+        return message.channel.send('🙇‍♀️ Gomen nasai ごめんなさい, I cannot find the song with that name!');
     }
 
 
-    if (searchResult.tracks.length == 1) {
+    if (searchResult.tracks.length == 1 || query.includes("https://")) {
         //play this song only
         const song = {
-            title: searchResult.playlist ? searchResult.tracks[0].title : searchResult.tracks[0].title,
-            url: searchResult.playlist ? searchResult.tracks[0].url : searchResult.tracks[0].url,
+            title: searchResult.tracks[0].title,
+            url: searchResult.tracks[0].url,
         };
 
         if (!serverQueue) {
@@ -173,11 +173,10 @@ async function search(message, serverQueue) {
             }
         } else {
             serverQueue.songs.push(song);
-            return message.channel.send("Why so demanding... Done." + "` " + `${song.title}` + " `" + "has been added to the queue!" + " 👍");
+            return message.channel.send("😳 Chotto matte kudasai~ " + "` " + `${song.title}` + " `" + "has been added to the queue!" + " 👍");
             // }
         }
-    } else {
-
+        return;
     }
 
     let compiledMessage = "";
@@ -207,7 +206,7 @@ async function search(message, serverQueue) {
             if (i == 4) {
                 message.channel.send("👀 Searched for: " + "` " + `${query}` + " `" + "\n");
                 message.channel.send("🎵 Top 5 results found for: " + "` " + `${query}` + " `" + "\n-\n");
-                message.channel.send("**🥳 PLEASE SELECT YOUR SONG FROM **" + "`" + "0-4" + "`" + " **BELOW:**" + " Type ` -select 0 ` to play the **first** song." + "\n\n");
+                message.channel.send("**🥳 SENPAI... I FOUND THESE SONGS **" + "`" + " 0-4 " + "`" + " **FOR YOU.**" + " Type ` -select 0 ` to play the **first** song." + "\n\n");
                 message.channel.send(compiledMessage);
 
             }
@@ -222,7 +221,7 @@ async function search(message, serverQueue) {
 async function select(message, serverQueue, songResultMap) {
     if (!message.member.voice.channel) {
         return message.channel.send(
-            "Please make sure to join a voice channel before selecting a song.");
+            "Please join a voice channel before selecting a song. 😊🙏🏻");
     }
 
     let myString = message.content;
@@ -279,15 +278,15 @@ async function select(message, serverQueue, songResultMap) {
 
             } else {
                 serverQueue.songs.push(song);
-                return message.channel.send("Why so demanding... Done. " + "` " + `${song.title}` + " `" + " has been added to the queue!" + " 👍");
+                return message.channel.send("😳 Chotto matte kudasai~ " + "` " + `${song.title}` + " `" + " has been added to the queue!" + " 👍");
             }
         } else {
             return message.channel.send(
-                "Invalid number selected. Please select a song from ` 0-4 ` only.");
+                "Nani? 😵 Invalid number selected. Please select a song from ` 0-4 ` only.");
         }
     } else {
         return message.channel.send(
-            "Invalid request. Please select a song from ` 0-4 ` only.");
+            "Nani? 😵 Invalid request. Please select a song from ` 0-4 ` only.");
     }
 
 
@@ -341,7 +340,7 @@ function play(messageGuildID, song) {
         return;
     }
 
-    const resource = createAudioResource(ytdl(song.url, { filter: 'audioonly', quality: 'highestaudio', highWaterMark: 1 << 32, }, { highWaterMark: 1 }));
+    const resource = createAudioResource(ytdl(song.url, { filter: 'audioonly', quality: 'highestaudio', highWaterMark: 1 << 25, }, { highWaterMark: 1 }));
     console.log("Created resource: " + resource.readable);
     // resource.volume.setVolume(0.5);
     audioPlayer.play(resource);
