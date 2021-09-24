@@ -14,6 +14,7 @@ const discordPlayer = new Player(client);
 
 const queue = new Map();
 let songResultMap = new Map();
+let repeat = false;
 
 
 client.once("ready", () => {
@@ -70,12 +71,26 @@ client.on("messageCreate", async message => {
         }
     } else if (message.content.startsWith(`${prefix}help`)) {
         message.channel.send("🔊 **DJ-Chan HELP SECTION:**\n");
-        message.channel.send("> Use ` -p ` to search for a song.\n");
-        message.channel.send("> Use ` -select ` to select a song from playlist.\n");
-        message.channel.send("> Use ` -skip ` to skip to the next song in queue.\n");
-        message.channel.send("> Use ` -stop ` to stop all songs and to disconnect DJ-Chan.\n-\n");
+        const str1 = "> Use ` -p ` to search for a song.\n";
+        const str2 = "> Use ` -select ` to select a song from playlist.\n";
+        const str3 = "> Use ` -skip ` to skip to the next song in queue.\n";
+        const str4 = "> Use ` -repeat ` to loop the current song.\n";
+        const str5 = "> Use ` -stop ` to stop all songs and to disconnect DJ-Chan.\n-\n";
+        message.channel.send(str1 + str2 + str3 + str4 + str5);
+        // message.channel.send("> Use ` -select ` to select a song from playlist.\n");
+        // message.channel.send("> Use ` -skip ` to skip to the next song in queue.\n");
+        // message.channel.send("> Use ` -repeat ` to loop the current song.\n");
+        // message.channel.send("> Use ` -stop ` to stop all songs and to disconnect DJ-Chan.\n-\n");
         message.channel.send("🤭🙏🏻 Ohayo~ Thank you for using ` DJ-Chan ` as your preferred music bot. I'm so happy to be at your service!");
         return;
+    } else if (message.content.startsWith(`${prefix}repeat`) || message.content.startsWith(`${prefix}loop`)) {
+        if (repeat) {
+            repeat = false;
+            message.channel.send("🔁 Repeat **DISABLED!**");
+        } else {
+            repeat = true;
+            message.channel.send("🔁 Repeat **ENABLED!**");
+        }
     }
     else {
         message.channel.send("Eh? What are you typing...I don't understand! 👀");
@@ -173,7 +188,7 @@ async function search(message, serverQueue) {
             }
         } else {
             serverQueue.songs.push(song);
-            return message.channel.send("😳 Chotto matte kudasai~ " + "` " + `${song.title}` + " `" + "has been added to the queue!" + " 👍");
+            return message.channel.send("😓 Chotto matte kudasai~ " + "` " + `${song.title}` + " `" + "has been added to the queue!" + " 👍");
             // }
         }
         return;
@@ -278,7 +293,7 @@ async function select(message, serverQueue, songResultMap) {
 
             } else {
                 serverQueue.songs.push(song);
-                return message.channel.send("😳 Chotto matte kudasai~ " + "` " + `${song.title}` + " `" + " has been added to the queue!" + " 👍");
+                return message.channel.send("😓 Chotto matte kudasai~ " + "` " + `${song.title}` + " `" + " has been added to the queue!" + " 👍");
             }
         } else {
             return message.channel.send(
@@ -301,8 +316,10 @@ function skip(message, serverQueue) {
         );
     if (!serverQueue)
         return message.channel.send("Uhh... There is no song that I could skip!");
-
     serverQueue.audioPlayer.stop();
+    if (repeat) {
+        serverQueue.songs.shift();
+    }
 }
 
 function stop(message, serverQueue) {
@@ -347,7 +364,9 @@ function play(messageGuildID, song) {
     serverQueue.connection.subscribe(audioPlayer);
     console.log("Connection subscribed to AudioPlayer!");
     audioPlayer.on(AudioPlayerStatus.Idle, () => {
-        serverQueue.songs.shift();
+        if (!repeat) {
+            serverQueue.songs.shift();
+        }
         play(messageGuildID, serverQueue.songs[0]);
     });
     audioPlayer.on("error", error => console.error(error));
